@@ -4,7 +4,7 @@ config = dotenv_values(".env")
 
 API_ENDPOINT = "https://www.alphavantage.co/query"
 BOT_TOKEN = config["BOT_TOKEN"]
-API_KEY = config["API_KEY"]
+ALPHA_V_API_KEY = config["ALPHA_V_API_KEY"]
 RAPID_API_KEY = config["RAPID_API_KEY"]
 
 class ValidIntervals:    

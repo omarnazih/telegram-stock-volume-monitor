@@ -49,7 +49,7 @@ def check_stock_volume(stock_symbol, interval:str=INTERVALS.DEFAULT, volume_thre
         "function": "TIME_SERIES_INTRADAY",
         "symbol": stock_symbol,
         "interval": interval,
-        "apikey": cfg.API_KEY
+        "apikey": cfg.ALPHA_V_API_KEY
     }
 
     data = None

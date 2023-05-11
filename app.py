@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 def check_stock_volume(stock_symbol, interval='5min', volume_threshold=100):
-    api_key = cfg.API_KEY
+    api_key = cfg.ALPHA_V_API_KEY
     api_endpoint = "https://www.alphavantage.co/query"
 
     params = {
