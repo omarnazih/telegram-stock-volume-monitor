@@ -18,6 +18,7 @@ pandas==2.0.1
 pycparser==2.21
 pyTelegramBotAPI==4.11.0
 python-dateutil==2.8.2
+python-dotenv==1.0.0
 pytz==2023.3
 requests==2.30.0
 schedule==1.2.0
