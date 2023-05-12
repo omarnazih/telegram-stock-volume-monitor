@@ -1,10 +1,7 @@
-from dotenv import dotenv_values, load_dotenv
+from dotenv import dotenv_values
 
 
-config = load_dotenv()
-
-if not config:
-    config = dotenv_values(".env")
+config = dotenv_values(".env")
 
 # Bot
 BOT_TOKEN = config["BOT_TOKEN"]
