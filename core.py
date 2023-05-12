@@ -7,44 +7,18 @@ import config as cfg
 from config import ValidIntervals as INTERVALS
 
 
-# def check_stock_volume_en(stock_symbol, interval=INTERVALS.DEFAULT, volume_threshold=100):
-#     params = {
-#         "function": "TIME_SERIES_INTRADAY",
-#         "symbol": stock_symbol,
-#         "interval": interval,
-#         "apikey": cfg.API_KEY
-#     }
 
-#     try:
-#         response = requests.get(cfg.API_ENDPOINT, params=params)
-#         data = response.json()
-#     except requests.exceptions.RequestException as e:
-#         print("An error occurred during the request:", str(e))
-#         return None
+def check_stock_volume(stock_symbol:str, interval:str=INTERVALS.DEFAULT, volume_threshold:int=100):    
+    """Checks If certain stock volume is meeting inputed critirea
 
-#     if f"Time Series ({interval})" not in data: return None
+    Args:
+        stock_symbol (str): stock symbol
+        interval (str, optional): _description_. Defaults to INTERVALS.DEFAULT.
+        volume_threshold (int, optional): _description_. Defaults to 100.
 
-#     print("Checking...", stock_symbol)
-
-#     time_series = data[f"Time Series ({interval})"]
-
-#     latest_time = max(time_series.keys())
-#     latest_volume = float(time_series[latest_time]["5. volume"])
-
-#     previous_times = sorted(time_series.keys())[:-1]
-#     previous_volumes = [float(time_series[time]["5. volume"]) for time in previous_times]
-
-#     volume_increase = latest_volume - sum(previous_volumes)
-#     volume_percentage_increase = (volume_increase / sum(previous_volumes)) * 100
-#     volume_percentage_increase = f"{round(volume_percentage_increase, 2)}%"
-
-#     if volume_increase > volume_threshold:
-#         return (stock_symbol, latest_volume, volume_increase, volume_percentage_increase)
-#     else:
-#         return None
-
-def check_stock_volume(stock_symbol, interval:str=INTERVALS.DEFAULT, volume_threshold:int=100):    
-
+    Returns:
+        stock_symbol, latest_volume, volume_increase, volume_percentage_increase
+    """
     params = {
         "function": "TIME_SERIES_INTRADAY",
         "symbol": stock_symbol,
@@ -96,6 +70,7 @@ def check_stock_volume(stock_symbol, interval:str=INTERVALS.DEFAULT, volume_thre
 def get_performing_stocks(stocks_to_monitor, interval:str=INTERVALS.DEFAULT, volume_threshold:int=100):    
     print(interval)
     for stock in stocks_to_monitor:
+        print(stock)
         result = check_stock_volume(stock, interval, volume_threshold)
         if result:
             symbol, latest_volume, volume_increase, volume_percentage_increase = result

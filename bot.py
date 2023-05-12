@@ -3,7 +3,7 @@ import time
 import config as cfg
 
 from core import *
-from util import get_all_symbols
+from util import get_filtered_symbols
 
 # Initialize the bot with your bot token
 bot = telebot.TeleBot(cfg.BOT_TOKEN)
@@ -35,7 +35,7 @@ def handle_threshold_input(message, interval):
             bot.send_message(message.chat.id, f"Volume threshold set to {threshold}. I will refresh my stock information every {interval} minutes.")
             try:
                 while True:
-                    stock_generator = get_performing_stocks(get_all_symbols(), volume_threshold=threshold)
+                    stock_generator = get_performing_stocks(get_filtered_symbols(), volume_threshold=threshold)
 
                     while True:
                         try:

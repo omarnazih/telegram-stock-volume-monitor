@@ -1,67 +1,88 @@
 import requests
 import config as cfg
 
-from datetime import datetime
+# Replace 'YOUR_API_KEY' with your actual API key from IEX Cloud
+API_KEY = cfg.IEX_API_KEY
+
+# Define the base URL for the IEX Cloud API
+BASE_URL = f'https://cloud.iexapis.com/stable'
+
+# Define the endpoint for fetching stocks
+SYMBOLS_ENDPOINT = f'{BASE_URL}/ref-data/symbols'
+
+# Make the API request to fetch the symbols
+response = requests.get(SYMBOLS_ENDPOINT, params={'token': API_KEY})
+data = response.json()
+
+# Filter stocks based on criteria
+filtered_stocks = []
+for stock in data:
+    if stock['isEnabled'] and stock['type'] == 'cs':
+        symbol = stock['symbol']
+        name = stock['name']
+
+        # Fetch additional stock information using the symbol
+        STOCK_ENDPOINT = f'{BASE_URL}/stock/{symbol}/quote'
+        response = requests.get(STOCK_ENDPOINT, params={'token': API_KEY})
+        stock_data = response.json()
+
+        # Extract the desired fields from the stock data
+        market_cap = stock_data['marketCap']
+        price = stock_data['latestPrice']
+
+        # Skip if no values
+        if market_cap == None: continue
+        if price == None: continue
+        
+        # Filter based on criteria
+        if (50e6 <= market_cap <= 300e6) and (1 <= price <= 20):
+            print(symbol, name, market_cap, price)
+            filtered_stocks.append(stock)
+
+# Print the filtered stocks
+for stock in filtered_stocks:
+    print(f"Symbol: {stock['symbol']}, Name: {stock['name']}, Market Cap: {stock_data['marketCap']}, Price: {stock_data['latestPrice']}")
 
 
-def check_stock_volume(stock_symbol, interval='5min', volume_threshold=100):
-    api_key = cfg.ALPHA_V_API_KEY
-    api_endpoint = "https://www.alphavantage.co/query"
+# import requests
+# import csv
+# import config as cfg
 
-    params = {
-        "function": "TIME_SERIES_INTRADAY",
-        "symbol": stock_symbol,
-        "interval": interval,
-        "apikey": api_key
-    }
-
-    try:
-        response = requests.get(api_endpoint, params=params)
-        data = response.json()
-    except requests.exceptions.RequestException as e:
-        print("An error occurred during the request:", str(e))
-        return None
-
-    if "Time Series (5min)" not in data:
-        return None
-
-    print("Checking...", stock_symbol)
-
-    time_series = data["Time Series (5min)"]
-
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    current_volume = None
-    previous_volume = 0
-
-    for time, values in time_series.items():
-        if time > current_time:
-            break
-        current_volume = float(values["5. volume"])
-        previous_volume = current_volume
-
-    if current_volume is None:
-        return None
-
-    volume_increase = current_volume - previous_volume
-    volume_percentage_increase = (volume_increase / previous_volume) * 100
-    volume_percentage_increase = f"{round(volume_percentage_increase, 2)}%"
-
-    if volume_increase > volume_threshold:
-        return (stock_symbol, current_volume, volume_increase, volume_percentage_increase)
-    else:
-        return None
+# from datetime import datetime
 
 
-from util import get_all_symbols
+# # Replace 'YOUR_API_KEY' with your actual API key from Alpha Vantage
+# API_KEY = cfg.ALPHA_V_API_KEY
 
-for stock in get_all_symbols():        
-    # result = check_stock_volume(stock, interval, volume_threshold)
-    result = check_stock_volume(stock)
-    if result:
-        symbol, latest_volume, volume_increase, volume_percentage_increase = result
-        text = f"Stock: {symbol} \n"\
-                f"Latest Volume: {latest_volume}\n"\
-                f"Volume Increase: {volume_increase}\n"\
-                f"Increase Percentage: {volume_percentage_increase}\n"\
-                "------------------------"
-        print(text)
+# # Define the URL for the API endpoint
+# URL = f'https://www.alphavantage.co/query?function=LISTING_STATUS&state=active&apikey={API_KEY}'
+
+# # Make the API request
+# with requests.Session() as s:
+#     download = s.get(URL)
+#     decoded_content = download.content.decode('utf-8')
+
+# # Parse the CSV data
+# cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+# data = list(cr)
+
+# print(data)
+# # Skip the header row
+# data = data[1:]
+
+# # Filter stocks based on criteria
+# filtered_stocks = []
+# for row in data:
+#     # Assuming the CSV columns are in a specific order, modify the indices accordingly
+#     symbol = row[0]
+#     name = row[1]
+#     market_cap = float(row[2])
+#     price = float(row[3])
+#     stock_float = float(row[4])
+    
+#     if 50e6 <= market_cap <= 300e6 and stock_float < 100e6 and 1 <= price <= 20:
+#         filtered_stocks.append(row)
+
+# # Print the filtered stocks
+# for stock in filtered_stocks:
+#     print(f"Symbol: {stock[0]}, Name: {stock[1]}, Market Cap: {stock[2]}, Price: {stock[3]}, Float: {stock[4]}")
