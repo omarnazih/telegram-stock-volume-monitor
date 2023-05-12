@@ -30,7 +30,6 @@ def check_stock_volume(stock_symbol:str, interval:str=INTERVALS.DEFAULT, volume_
 
     try:
         response = requests.get(cfg.API_ENDPOINT, params=params)
-        response.raise_for_status()  # Optional: Raise an exception if the request was not successful
         data = response.json()
     except requests.exceptions.RequestException as e:
         print("An error occurred during the request:", str(e))
@@ -38,30 +37,32 @@ def check_stock_volume(stock_symbol:str, interval:str=INTERVALS.DEFAULT, volume_
     except ValueError:
         print("Invalid JSON response received.")   
         return None
+    except Exception as e:
+        print("An error occurred:", str(e))    
+        return None
 
     if f"Time Series ({interval})" not in data: return None  # Failed to retrieve data
 
     print("Checking...", stock_symbol)
 
-    time_series = data[f"Time Series ({interval})"]
+    time_series = data[f'Time Series ({interval})']  # Adjust this based on the desired time interval
 
-    # Retrieve the latest two data points
-    latest_time = max(time_series.keys())
-    print(latest_time)
-    latest_volume = int(time_series[latest_time]["5. volume"])
-    print(latest_volume)
+    time_points = list(time_series.keys())
 
-    previous_time = sorted(time_series.keys())[-2]
-    print(previous_time)
-    previous_volume = int(time_series[previous_time]["5. volume"])
-    print(previous_volume)
+    volume_values = [int(time_series[time_point]['5. volume']) for time_point in time_points]
 
-    volume_increase = latest_volume - previous_volume
-    volume_percentage_increase = (volume_increase / previous_volume) * 100
-    volume_percentage_increase = f"{round(volume_percentage_increase, 2)}%"
-
-    if volume_increase > volume_threshold:
-        return (stock_symbol, latest_volume, volume_increase, volume_percentage_increase)
+    volume_before = volume_values[-2]
+    volume_after = volume_values[-1]
+    volume_increase = volume_after - volume_before
+            
+    volume_increase_percentage = volume_increase / volume_before * 100
+    
+    if volume_increase_percentage >= volume_threshold:
+        time_before = time_points[-2]
+        time_after = time_points[-1]        
+        # print(f"Time Before: {time_before}")
+        # print(f"Time After: {time_after}")
+        return (stock_symbol, volume_before, volume_after, volume_increase, volume_increase_percentage)
     else:
         return None
 
@@ -70,14 +71,14 @@ def check_stock_volume(stock_symbol:str, interval:str=INTERVALS.DEFAULT, volume_
 def get_performing_stocks(stocks_to_monitor, interval:str=INTERVALS.DEFAULT, volume_threshold:int=100):    
     print(interval)
     for stock in stocks_to_monitor:
-        print(stock)
         result = check_stock_volume(stock, interval, volume_threshold)
         if result:
-            symbol, latest_volume, volume_increase, volume_percentage_increase = result
-            text = f"Stock: {symbol} \n"\
-                    f"Latest Volume: {latest_volume}\n"\
+            stock_symbol, volume_before, volume_after, volume_increase, volume_increase_percentage = result
+            text = f"Stock: {stock_symbol} \n"\
+                    f"Volume Before: {volume_before}\n"\
+                    f"Volume After: {volume_after}\n"\
                     f"Volume Increase: {volume_increase}\n"\
-                    f"Increase Percentage: {volume_percentage_increase}\n"\
+                    f"Increase Percentage: {volume_increase_percentage:.2f}%\n"\
                     "------------------------"
             print(text)
             yield text

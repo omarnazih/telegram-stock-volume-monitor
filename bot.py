@@ -20,7 +20,7 @@ def handle_interval_input(message):
         if interval <= 0:
             bot.send_message(message.chat.id, "Invalid interval. Please enter a positive value.")
         else:
-            bot.send_message(message.chat.id, f"Interval set to {interval} minutes. Please enter the volume threshold.")
+            bot.send_message(message.chat.id, f"Interval set to {interval} minutes. Please enter the volume threshold increase percentage.")
 
             bot.register_next_step_handler(message, handle_threshold_input, interval)
     except ValueError:
