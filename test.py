@@ -34,7 +34,7 @@ def check_volume_increase(stock_symbol, time_interval, volume_increase_percentag
             print(f"Time After: {time_after}")
             print(f"Volume Increase: {volume_increase}")
             print(f"Volume Increase Percentage: {volume_increase_perc:.2f}%")
-            return (stock_symbol, latest_volume, volume_increase, volume_percentage_increase)
+            return (stock_symbol, volume_before, volume_after, volume_increase)
         else:
             print("Criteria not met: Volume increase percentage is below specified threshold.")
             return None
