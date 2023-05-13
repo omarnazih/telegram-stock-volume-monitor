@@ -10,6 +10,7 @@ BOT_TOKEN = config["BOT_TOKEN"]
 ALPHA_V_API_KEY = config["ALPHA_V_API_KEY"]
 IEX_API_KEY = config["IEX_API_KEY"]
 RAPID_API_KEY = config["RAPID_API_KEY"]
+POLYGON_API_KEY = config["POLYGON_API_KEY"]
 
 # API End Points
 API_ENDPOINT = "https://www.alphavantage.co/query"
@@ -21,6 +22,7 @@ class ValidIntervals:
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
+    DAY_1 = "1day"
     MIN_1 = "1min"
     MIN_5 = "5min"
     MIN_15 = "15min"
@@ -28,4 +30,4 @@ class ValidIntervals:
     MIN_60 = "60min"
 
     # Default value
-    DEFAULT= MIN_5
+    DEFAULT= MIN_1
