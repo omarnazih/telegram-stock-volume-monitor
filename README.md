@@ -23,8 +23,9 @@ Before running the project, ensure you have the following:
 ## Setup
 
 1. Clone the project repository
-2. Setup Virutal Environment
+2. Setup and activate Virutal Environment
 3. Install Requirments file
 4. Rename .example.env to .env
-5. Fill .env File With Secrets required
+5. Fill .env File With Secrets required (including BOT_TOKEN) Generated from bot father on telegram (look it up).
 6. run bot.py file
+7. Congrats!! Now the bot is running
