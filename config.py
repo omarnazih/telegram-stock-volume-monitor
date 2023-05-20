@@ -8,9 +8,14 @@ BOT_TOKEN = config["BOT_TOKEN"]
 
 # API Keys
 ALPHA_V_API_KEY = config["ALPHA_V_API_KEY"]
+TIINGO_API_KEY = config["TIINGO_API_KEY"]
+FMP_API_KEY = config["FMP_API_KEY"]
 IEX_API_KEY = config["IEX_API_KEY"]
 RAPID_API_KEY = config["RAPID_API_KEY"]
 POLYGON_API_KEY = config["POLYGON_API_KEY"]
+
+ALPACA_API_KEY = config["ALPACA_API_KEY"]
+ALPACA_API_SECRET = config["ALPACA_API_SECRET"]
 
 # API End Points
 API_ENDPOINT = "https://www.alphavantage.co/query"

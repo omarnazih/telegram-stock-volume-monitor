@@ -1,27 +1,80 @@
-#https://pypi.org/project/websocket_client/
-# https://finnhub.io/docs/api/websocket-trades
-import websocket
+import requests
+import time
 
-def on_message(ws, message):
-    print(message)
+from datetime import datetime
+from multiprocessing import Pool
 
-def on_error(ws, error):
-    print(error)
+import config as cfg
 
-def on_close(ws):
-    print("### closed ###")
 
-def on_open(ws):
-    ws.send('{"type":"subscribe","symbol":"AAPL"}')
-    ws.send('{"type":"subscribe","symbol":"AMZN"}')
-    # ws.send('{"type":"subscribe","symbol":"BINANCE:BTCUSDT"}')
-    # ws.send('{"type":"subscribe","symbol":"IC MARKETS:1"}')
+def track_stock_volume(ticker:str):
+    api_key = cfg.FMP_API_KEY
+    url = f"https://financialmodelingprep.com/api/v3/quote/{ticker}?apikey={api_key}"
 
-if __name__ == "__main__":
-    websocket.enableTrace(True)
-    ws = websocket.WebSocketApp("wss://ws.finnhub.io?token=chftkk9r01qhsjlal1ggchftkk9r01qhsjlal1h0",
-                              on_message = on_message,
-                              on_error = on_error,
-                              on_close = on_close)
-    ws.on_open = on_open
-    ws.run_forever()
+    print("Started Tracking...")
+    
+    # Get initial stock volume, price, and timestamp
+    response = requests.get(url)
+    data = response.json()    
+        
+    data = data[0]
+
+    initial_volume = data['volume']
+    initial_price = data['price']
+
+    while True:
+
+        # Wait for the specified interval
+        # time.sleep(interval_minutes * 60)
+                
+        # Get current stock volume, price, and timestamp
+        response = requests.get(url)
+        data = response.json()
+        data = data[0]
+        current_volume = data['volume']
+        current_price = data['price']
+        change_percentage = data['changesPercentage']
+        current_timestamp = data['timestamp']
+
+        # Calculate percentage change in volume
+        percentage_change = ((current_volume - initial_volume) / initial_volume) * 100
+
+        # Check if the volume increase exceeds the threshold
+        # if percentage_change >= threshold_percentage or threshold_percentage == threshold_percentage:
+        yield(
+            ticker,
+            percentage_change,
+            initial_price,
+            current_price,
+            initial_volume,
+            current_volume,
+            current_timestamp,
+        )        
+        print(f"Stock volume for `{ticker}` increased by {percentage_change}%")
+        print(f"Price before increase: 💰{initial_price}")
+        print(f"Price after increase: 💰{current_price}")
+        print(f"Change Percentage: 📈{change_percentage}")
+        print(f"Volume before increase: {initial_volume}")
+        print(f"Volume after increase: {current_volume}")
+        print(f"Time of increase: 🕒{datetime.fromtimestamp(current_timestamp)}")
+        print("-----------------------------------")
+
+        # Update initial volume, price, and timestamp for the next iteration
+        initial_volume = current_volume
+        initial_price = current_price
+
+
+# List of tickers to track
+tickers = ["AAPL", "GOOGL", "MSFT", "AMZN"]  # Add more tickers as needed
+
+# Set the threshold percentage and interval
+threshold_percentage = 0.05
+interval_minutes = 1
+
+# Create a multiprocessing pool with the number of desired processes
+num_processes = 1  # Adjust the number of processes as needed
+pool = Pool(num_processes)
+
+track_stock_volume("AAPL")
+# Track stock volume concurrently for each ticker
+# pool.map(track_stock_volume, tickers)

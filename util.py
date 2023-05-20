@@ -20,7 +20,6 @@ def get_filtered_symbols():
     with open(CSV_FILE, 'r') as file:
         reader = csv.DictReader(file)
         
-        # Iterate over each row in the CSV file
         symbols_list = [row['Ticker'] for row in reader]
         
         # Get the count of rows

@@ -14,6 +14,7 @@ def handle_start(message):
 
     bot.register_next_step_handler(message, handle_interval_input)
 
+
 def handle_interval_input(message):
     try:
         interval = int(message.text)
@@ -25,6 +26,7 @@ def handle_interval_input(message):
             bot.register_next_step_handler(message, handle_threshold_input, interval)
     except ValueError:
         bot.send_message(message.chat.id, "Invalid interval. Please enter a valid number.")
+
 
 def handle_threshold_input(message, interval):
     try:
@@ -51,7 +53,7 @@ def handle_threshold_input(message, interval):
             except Exception as e:
                 # Handling the exception
                 print("An error occurred:", str(e))
-                bot.send_message(message.chat.id, "There was an error! \n the Developer has been notified!")        
+                bot.send_message(message.chat.id, "There was an error! \n the Developer 👨🏻‍💻 has been notified!")        
     except ValueError:
         bot.send_message(message.chat.id, "Invalid threshold. Please enter a valid number.")
 
