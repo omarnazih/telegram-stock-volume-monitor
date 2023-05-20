@@ -25,4 +25,5 @@ Before running the project, ensure you have the following:
 1. Clone the project repository
 2. Setup Virutal Environment
 3. Install Requirments file
-4. run bot.py file
+4. Fill .env File
+5. run bot.py file
