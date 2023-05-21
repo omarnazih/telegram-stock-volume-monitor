@@ -9,7 +9,7 @@ CSV_FILE = cfg.CSV_FILENAME
 API_KEY = cfg.RAPID_API_KEY
 
 
-def get_filtered_symbols():
+def get_filtered_symbols(limit:int=1):
     """Return Filterd Stock Symbols
     """
 
@@ -26,6 +26,11 @@ def get_filtered_symbols():
         symbols_count = reader.line_num - 1
 
     print(f"Fetched ({symbols_count}) stock symbols!.")
+    
+    if limit: 
+        print(symbols_list[:limit])
+        return symbols_list[:limit]
+
     return symbols_list
 
  

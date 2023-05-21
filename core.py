@@ -1,162 +1,95 @@
+import concurrent.futures
 import requests
-import schedule
-from datetime import datetime
 import time
+
+from datetime import datetime
 
 import config as cfg
 
-from config import ValidIntervals as INTERVALS
 
-# def check_stock_volume(stock_symbol: str, interval:str = INTERVALS.DEFAULT,volume_threshold: int = 100):
-#     """Checks if a certain stock's volume meets the specified criteria.
-
-#     Args:
-#         stock_symbol (str): Stock symbol.
-#         volume_threshold (int, optional): Minimum volume increase threshold. Defaults to 100.
-
-#     Returns:
-#         tuple: (stock_symbol, volume_before, volume_after, volume_increase, volume_increase_percentage)
-#                Returns None if the volume criteria is not met or an error occurs.
-#     """
-#     url = "https://twelve-data1.p.rapidapi.com/time_series"
-
-#     querystring = {"symbol":str(stock_symbol),"interval":interval}
-
-#     headers = {
-#         "X-RapidAPI-Key": cfg.RAPID_API_KEY,
-#         "X-RapidAPI-Host": "twelve-data1.p.rapidapi.com"
-#     }
-
-    
-#     print(stock_symbol)
-#     try:
-#         response = requests.get(url, headers=headers, params=querystring)
-#         data = response.json()
-#     except requests.exceptions.RequestException as e:
-#         print("An error occurred during the request:", str(e))
-#         return None
-#     except ValueError:
-#         print("Invalid JSON response received.")
-#         return None
-#     except Exception as e:
-#         print("An error occurred:", str(e))
-#         return None
-
-#     if "values" not in data:
-#         return None  # Failed to retrieve data
-
-#     print("Checking...", stock_symbol)
-
-#     values = data["values"]
-
-#     if len(values) < 2:
-#         return None  # Insufficient data points
-
-#     volume_before = int(values[-2]["volume"])
-#     volume_after = int(values[-1]["volume"])
-#     volume_increase = volume_after - volume_before
-
-#     if volume_before == 0:
-#         volume_increase_percentage = 0
-#     else:
-#         volume_increase_percentage = (volume_increase / volume_before) * 100
-
-#     if volume_increase_percentage >= volume_threshold:
-#         time_before = values[-2]["datetime"]
-#         time_after = values[-1]["datetime"]
-#         print(f"Time Before: {time_before}")
-#         print(f"Time After: {time_after}")
-#         return (
-#             stock_symbol,
-#             volume_before,
-#             volume_after,
-#             volume_increase,
-#             volume_increase_percentage,
-#         )
-#     else:
-#         return None
-
-
-def track_stock_volume(ticker:str, threshold_percentage:int=100):
+def get_stock_quote(ticker):
     api_key = cfg.FMP_API_KEY
     url = f"https://financialmodelingprep.com/api/v3/quote/{ticker}?apikey={api_key}"
-
-    print("Started Tracking...")
-    
-    # Get initial stock volume, price, and timestamp
     response = requests.get(url)
-    data = response.json()    
-        
-    data = data[0]
-
-    initial_volume = data['volume']
-    initial_price = data['price']
-
-    while True:
-
-        # Wait for the specified interval
-        # time.sleep(interval_minutes * 60)
-                
-        # Get current stock volume, price, and timestamp
-        response = requests.get(url)
+    print(response)
+    if response.status_code == 200:
         data = response.json()
-        data = data[0]
-        current_volume = data['volume']
-        current_price = data['price']
-        change_percentage = data['changesPercentage']
-        current_timestamp = data['timestamp']
+        print()
+        if len(data) > 0:
+            return data[0]  # Return the first quote from the response
+    return None
 
-        # Calculate percentage change in volume
-        percentage_change = ((current_volume - initial_volume) / initial_volume) * 100
+def track_stocks_parallel(tickers, interval=0.2, target_percentage_increase=0.0005):
+    target_percentage_increase = 0.0005  # Define the target percentage increase per minute
+    INTERVAL = interval
+    # Create a dictionary to store the last volume and price values for each stock
+    last_volumes = {ticker: None for ticker in tickers}
+    last_prices = {ticker: None for ticker in tickers}
+    
+    while True:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Submit the API requests for each stock in parallel
+            futures = [executor.submit(get_stock_quote, ticker) for ticker in tickers]
 
-        # Check if the volume increase exceeds the threshold
-        if percentage_change >= threshold_percentage:
-            yield(
-                ticker,
-                percentage_change,
-                initial_price,
-                current_price,
-                change_percentage,
-                initial_volume,
-                current_volume,
-                current_timestamp,
-            )        
+            # Process the results as they become available
+            for future in concurrent.futures.as_completed(futures):
+                quote = future.result()
+                if quote is not None:
+                    ticker = quote['symbol']
+                    current_volume = float(quote['volume'])
+                    current_price = float(quote['price'])
+                    current_timestamp = quote['timestamp']
+                    print(ticker)
+                    # Check if the last volume and price values are available
+                    if last_volumes[ticker] is not None and last_prices[ticker] is not None:
+                        initial_volume = last_volumes[ticker]
+                        initial_price = last_prices[ticker]
+                        
+                        percentage_change = (current_price - initial_price) / initial_price * 100
+                        change_percentage = (current_volume - initial_volume) / initial_volume * 100
+                        
+                        print(ticker)
+                        # if change_percentage >= target_percentage_increase:
+                        yield (
+                            ticker,
+                            percentage_change,
+                            initial_price,
+                            current_price,
+                            change_percentage,
+                            initial_volume,
+                            current_volume,
+                            current_timestamp,
+                        )
 
+                    last_volumes[ticker] = current_volume
+                    last_prices[ticker] = current_price
 
-        # Update initial volume, price, and timestamp for the next iteration
-        initial_volume = current_volume
-        initial_price = current_price
-        # !Rmove
-        time.sleep(1 * 60)
+        time.sleep(INTERVAL * 60)  # Wait for 1 minute before checking again
 
+# Example usage
+tickers = ["AAPL", "GOOGL"]
 
-def get_performing_stocks(stocks_to_monitor, interval:str=INTERVALS.DEFAULT, volume_threshold:int=100):    
-
-    for stock in stocks_to_monitor:
-
-        volume_generator = track_stock_volume(stock)
-
-        while True:
-            try:
-                result = next(volume_generator)
-                if result:
-                    ticker, percentage_change, initial_price, current_price, change_percentage, initial_volume, current_volume, current_timestamp = result
-                    text = f"Stock volume for `{ticker}` increased by {percentage_change:.2f}% \n"\
-                            f"Price before increase: 💰{initial_price} \n"\
-                            f"Price after increase: 💰{current_price} \n"\
-                            f"Change Percentage: 📈{change_percentage}\n"\
-                            f"Volume before increase: {initial_volume}\n"\
-                            f"Volume after increase: {current_volume}\n"\
-                            f"Time of increase: 🕒{datetime.fromtimestamp(current_timestamp)}\n"\
-                            "-----------------------------------"
-                    yield text                
-                
-            except StopIteration:
-                print("No more data!")
-                break        
-
-
-if __name__ == "__main__":
-    gen = get_performing_stocks(["AAPL"])
-    for g in gen:
-        print(g)
+def get_performing_stocks(tickers, volume_threshold=0.005):
+    for result in track_stocks_parallel(tickers):
+        ticker, percentage_change, initial_price, current_price, change_percentage, initial_volume, current_volume, current_timestamp = result
+        
+        text = f"Stock volume for `{ticker}` increased by {percentage_change:.2f}% \n"\
+                f"Price before increase: 💰{initial_price} \n"\
+                f"Price after increase: 💰{current_price} \n"\
+                f"Change Percentage: 📈{change_percentage}%\n"\
+                f"Volume before increase: {initial_volume}\n"\
+                f"Volume after increase: {current_volume}\n"\
+                f"Time of increase: 🕒{datetime.fromtimestamp(current_timestamp)}\n"\
+                "-----------------------------------"
+        yield text       
+    print(f"Stock: {ticker}")
+    print(f"Percentage Change: {percentage_change}%")
+    print(f"Initial Price: {initial_price}")
+    print(f"Current Price: {current_price}")
+    print(f"Change Percentage: {change_percentage}%")
+    print(f"Initial Volume: {initial_volume}")
+    print(f"Current Volume: {current_volume}")
+    print(f"Timestamp: {current_timestamp}")
+    
+    
+# get_performing_stocks(tickers)   

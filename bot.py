@@ -1,8 +1,9 @@
 import telebot
 import time
 import config as cfg
+from core import get_performing_stocks
 
-from core import *
+from core_old import *
 from util import get_filtered_symbols
 
 # Initialize the bot with your bot token
