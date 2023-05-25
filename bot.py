@@ -36,9 +36,14 @@ def handle_threshold_input(message, interval):
             bot.send_message(message.chat.id, "Invalid threshold. Please enter a non-negative value.")
         else:
             bot.send_message(message.chat.id, f"Volume threshold set to {threshold}. I will refresh my stock information every {interval} minutes.")
+            bot.send_message(message.chat.id, f"Started monitoring stocks... \n If any stocks meet the threshold, I will send you a message.")
             try:
                 while True:
-                    stock_generator = get_performing_stocks(get_filtered_symbols(), volume_threshold=threshold)
+                    # tickers = ["BTCUSD", "MCOUSD", "FAIRUSD"]
+                    tickers = ["BTCUSD"]
+                    # stock_generator = get_performing_stocks( """get_filtered_symbols()""", volume_threshold=threshold)
+                    threshold=100 #!todo remove this
+                    stock_generator = get_performing_stocks(tickers, volume_threshold=threshold)
 
                     while True:
                         try:
@@ -50,7 +55,7 @@ def handle_threshold_input(message, interval):
                     
                     bot.send_message(message.chat.id, "Interval Finished Waiting for next Interval!")
                     # Sleep for the specified interval in minutes
-                    time.sleep(interval * 60)
+                    time.sleep(interval * 60) #!todo remove, this interval is deprecated as I am using the new core.py
             except Exception as e:
                 # Handling the exception
                 print("An error occurred:", str(e))
